@@ -54,17 +54,33 @@ public class ImagePersistenceApplication {
         @Override
         public void run(String... strings) throws Exception {
             final JCSMPSession session = solaceFactory.createSession();
-            Topic topic = null;
 
-            String topicName = Utils.getEnvironmentValue("TOPIC_NAME", "T/MQTTRomo/*/vision/RMPictureModuleDidTakePictureNotification");
+            String imageQueueName = Utils.getEnvironmentValue("IMAGE_QUEUE_NAME", "Q/imageIngress");
 
-            topic = JCSMPFactory.onlyInstance().createTopic(topicName);
-            logger.info("Subscribed to topic {}", topicName);
-            
+            final EndpointProperties queueEndpointProps = new EndpointProperties();
+            // set queue permissions to "consume" and access-type to "exclusive"
+            queueEndpointProps.setPermission(EndpointProperties.PERMISSION_CONSUME);
+            queueEndpointProps.setAccessType(EndpointProperties.ACCESSTYPE_NONEXCLUSIVE);
+
+            // create the queue object locally
+            final Queue queue = JCSMPFactory.onlyInstance().createQueue(imageQueueName);
+
+            // Actually provision it, and do not fail if it already exists
+            session.provision(queue, queueEndpointProps, JCSMPSession.FLAG_IGNORE_ALREADY_EXISTS);
+
+            logger.info("Subscribed to queue {}", imageQueueName);
+
+            // Create a Flow be able to bind to and consume messages from the Queue.
+            final ConsumerFlowProperties flow_prop = new ConsumerFlowProperties();
+            flow_prop.setEndpoint(queue);
+            flow_prop.setAckMode(JCSMPProperties.SUPPORTED_MESSAGE_ACK_AUTO);
+
+            EndpointProperties consumerEndpointProps = new EndpointProperties();
+            consumerEndpointProps.setAccessType(EndpointProperties.ACCESSTYPE_NONEXCLUSIVE);
+
             ImagePersistenceMessageConsumer msgConsumer = new ImagePersistenceMessageConsumer(session);
-            XMLMessageConsumer cons = session.getMessageConsumer(msgConsumer);
+            FlowReceiver cons = session.createFlow(msgConsumer, flow_prop, consumerEndpointProps);
 
-            session.addSubscription(topic);
             logger.info("Connected. Awaiting message...");
             cons.start();
 

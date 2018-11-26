@@ -110,12 +110,6 @@
 				<module>solace-java-spring-boot-autoconfigure</module>
 				<module>solace-java-spring-boot-starter</module>
 			</modules>
-			<distributionManagement>
-				<snapshotRepository>
-					<id>ossrh</id>
-					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-				</snapshotRepository>
-			</distributionManagement>
 			<build>
 				<plugins>
 					<plugin>
@@ -167,18 +161,6 @@
 				<module>solace-java-spring-boot-autoconfigure</module>
 				<module>solace-java-spring-boot-starter</module>
             </modules>
-			<distributionManagement>
-				<repository>
-					<id>releases</id>
-					<name>Apps Releases Repository</name>
-					<url>http://apps-jenkins:9090/nexus/content/repositories/releases</url>
-				</repository>
-				<snapshotRepository>
-					<id>snapshots</id>
-					<name>Apps Snapshots Repository</name>
-					<url>http://apps-jenkins:9090/nexus/content/repositories/snapshots</url>
-				</snapshotRepository>
-			</distributionManagement>
 		</profile>
 	</profiles>
 
