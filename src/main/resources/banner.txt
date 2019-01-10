@@ -1,4 +1,7 @@
-
+${application.title}
+${application.formatted-version}
+${spring-boot.formatted-version}
+${AnsiColor.GREEN}
  _____         _                      _____                                  _                 _____
 /  ___|       | |                    |_   _|                                | |               |____ |
 \ `--.   ___  | |  __ _   ___   ___    | |   _ __ ___    __ _   __ _   ___  | |_   ___    ___     / /
