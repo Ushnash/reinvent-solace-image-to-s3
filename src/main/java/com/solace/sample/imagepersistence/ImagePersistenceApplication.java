@@ -43,6 +43,9 @@ public class ImagePersistenceApplication implements CommandLineRunner {
     @Autowired
     private SpringJCSMPFactory solaceFactory;
 
+    @Autowired
+    private ImagePersistenceMessageConsumer msgConsumer;
+
     @Value("${app.queue}")
     private String imageQueueName;
 
@@ -71,7 +74,8 @@ public class ImagePersistenceApplication implements CommandLineRunner {
 	EndpointProperties consumerEndpointProps = new EndpointProperties();
 	consumerEndpointProps.setAccessType(EndpointProperties.ACCESSTYPE_NONEXCLUSIVE);
 
-	ImagePersistenceMessageConsumer msgConsumer = new ImagePersistenceMessageConsumer();
+	// ImagePersistenceMessageConsumer msgConsumer = new
+	// ImagePersistenceMessageConsumer();
 	FlowReceiver cons = session.createFlow(msgConsumer, flow_prop, consumerEndpointProps);
 
 	logger.info("Connected. Awaiting message...");

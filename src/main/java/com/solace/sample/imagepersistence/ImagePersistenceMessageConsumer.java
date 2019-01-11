@@ -35,7 +35,9 @@ import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
@@ -51,25 +53,33 @@ import com.solacesystems.jcsmp.XMLMessageListener;
 import twitter4j.MediaEntity;
 import twitter4j.Status;
 
+@Component
 public class ImagePersistenceMessageConsumer implements XMLMessageListener {
 
     private CountDownLatch latch = new CountDownLatch(1);
     private static final Logger logger = LoggerFactory.getLogger(ImagePersistenceMessageConsumer.class);
 
-    @Value("${aws.clientregion}")
     String clientRegion;
-
-    @Value("${aws.s3.bucket}")
     String bucketName;
-
-    @Value("${aws.s3.objectkeyprefix}")
     String objectKeyPrefix;
 
-    @Value("${app.image.source.default}")
     String source;
 
     // default constructor
-    public ImagePersistenceMessageConsumer() {
+    @Autowired
+    public ImagePersistenceMessageConsumer(@Value("${aws.clientregion}") String clientRegion,
+	    @Value("${aws.s3.bucket}") String bucketName, @Value("${aws.s3.objectkeyprefix}") String objectKeyPrefix,
+	    @Value("${app.image.source.default}") String source) {
+
+	this.clientRegion = clientRegion;
+	this.bucketName = bucketName;
+	this.objectKeyPrefix = objectKeyPrefix;
+	this.source = source;
+
+	logger.debug("============= AWS Client Region = {}", clientRegion);
+	logger.debug("============= AWS S3 Bucket = {}", bucketName);
+	logger.debug("============= AWS Object Key Prefix = {}", objectKeyPrefix);
+	logger.debug("============= AWS Default Image Source = {}", source);
     }
 
     @Override
@@ -134,6 +144,8 @@ public class ImagePersistenceMessageConsumer implements XMLMessageListener {
 		}
 	    } catch (Exception ex) {
 
+		logger.info("============= Not a tweet. Treating the message as a JPG image.");
+
 		// Treat binaryAttachment as an image and not a tweet
 		imageData = new byte[binaryAttachment.remaining()];
 		binaryAttachment.get(imageData);
@@ -144,15 +156,13 @@ public class ImagePersistenceMessageConsumer implements XMLMessageListener {
 
 	    try {
 
-		logger.info("============= Not a tweet. Treating the message as a JPG image.");
-
 		if (isJpeg) {
 
 		    // Build an S3 Client to persist the image.
 		    // Passing null to the Credential manager uses the
 		    // DefaultAWSCredentialsProviderChain
-		    AmazonS3 s3Client = AmazonS3ClientBuilder.standard().withRegion(clientRegion).withCredentials(null)
-			    .build();
+		    AmazonS3 s3Client = AmazonS3ClientBuilder.standard().withRegion(clientRegion).build();
+		    // AmazonS3 s3Client = AmazonS3ClientBuilder.defaultClient().build();
 
 		    // Upload a file as a new object with ContentType and title specified.
 		    InputStream fileInputStream = new ByteArrayInputStream(imageData);
